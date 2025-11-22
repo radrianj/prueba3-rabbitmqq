@@ -906,3 +906,23 @@
 1763775080: New client connected from ::ffff:172.19.0.1:48314 as web_monitor_7547f3 (p2, c1, k60).
 1763776712: Saving in-memory database to /mosquitto/data//mosquitto.db.
 1763778513: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1763778845: mosquitto version 2.0.22 starting
+1763778845: Config loaded from /mosquitto/config/mosquitto.conf.
+1763778845: Opening ipv4 listen socket on port 1883.
+1763778845: Opening ipv6 listen socket on port 1883.
+1763778845: Opening websockets listen socket on port 9001.
+1763778845: mosquitto version 2.0.22 running
+1763778847: New client connected from ::ffff:172.19.0.1:32816 as web_monitor_7547f3 (p2, c1, k60).
+1763778849: New connection from 172.19.0.5:50478 on port 1883.
+1763778849: New client connected from 172.19.0.5:50478 as mqttjs_30becaac (p2, c1, k60).
+1763778849: New connection from 172.19.0.9:42554 on port 1883.
+1763778849: New client connected from 172.19.0.9:42554 as mqttjs_5b9fd54b (p2, c1, k60).
+1763778849: New connection from 172.19.0.6:39400 on port 1883.
+1763778849: New connection from 172.19.0.4:47726 on port 1883.
+1763778849: New client connected from 172.19.0.6:39400 as unicast_sensor-001_6a6e29 (p2, c1, k60).
+1763778849: New client connected from 172.19.0.4:47726 as mqttjs_bf0542a4 (p2, c1, k60).
+1763778849: New connection from 172.19.0.7:41666 on port 1883.
+1763778849: New client connected from 172.19.0.7:41666 as time_server_01 (p2, c1, k60).
+1763778849: New connection from 172.19.0.10:41558 on port 1883.
+1763778849: New client connected from 172.19.0.10:41558 as persistence_sub_3834d7 (p2, c1, k60).
+1763780646: Saving in-memory database to /mosquitto/data//mosquitto.db.
