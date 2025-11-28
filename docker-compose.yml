@@ -72,7 +72,9 @@ services:
       - PROCESS_ID=0
       # --- NUEVO: Configuración de Elección ---
       - PROCESS_PRIORITY=10 # El ID más bajo
-      - ELECTION_PARTICIPANTS=10:sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+      - ELECTION_PARTICIPANTS=sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+    volumes:
+      - ./wal_logs:/app/publisher  # ← FASE 3: Persistir WAL en disco host
     restart: on-failure
 
   # --- Servicio para el Publicador (Sensor 2) ---
@@ -89,7 +91,9 @@ services:
       - PROCESS_ID=1
       # --- NUEVO: Configuración de Elección ---
       - PROCESS_PRIORITY=20 # ID intermedio
-      - ELECTION_PARTICIPANTS=10:sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+      - ELECTION_PARTICIPANTS=sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+    volumes:
+      - ./wal_logs:/app/publisher  # ← FASE 3: Persistir WAL en disco host
     restart: on-failure
 
     # --- Servicio para el Publicador (Sensor 3) ---
@@ -106,7 +110,9 @@ services:
       - PROCESS_ID=2
       # --- NUEVO: Configuración de Elección ---
       - PROCESS_PRIORITY=30 # ID intermedio
-      - ELECTION_PARTICIPANTS=10:sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+      - ELECTION_PARTICIPANTS=sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+    volumes:
+      - ./wal_logs:/app/publisher  # ← FASE 3: Persistir WAL en disco host
     restart: on-failure
 
     # --- Servicio para el Publicador (Sensor 4) ---
@@ -123,7 +129,9 @@ services:
       - PROCESS_ID=3
       # --- NUEVO: Configuración de Elección ---
       - PROCESS_PRIORITY=40 # ID intermedio
-      - ELECTION_PARTICIPANTS=10:sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+      - ELECTION_PARTICIPANTS=sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+    volumes:
+      - ./wal_logs:/app/publisher  # ← FASE 3: Persistir
     restart: on-failure
 
     # --- Servicio para el Publicador (Sensor 5) ---
@@ -140,7 +148,9 @@ services:
       - PROCESS_ID=4
       # --- NUEVO: Configuración de Elección ---
       - PROCESS_PRIORITY=50 # ID intermedio
-      - ELECTION_PARTICIPANTS=10:sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+      - ELECTION_PARTICIPANTS=sensor-1:10,sensor-2:20,sensor-3:30,sensor-4:40,sensor-5:50
+    volumes:
+      - ./wal_logs:/app/publisher  # ← FASE 3: Persistir WAL en disco host
     restart: on-failure
 
 

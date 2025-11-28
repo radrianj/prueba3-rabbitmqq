@@ -66,17 +66,71 @@ mqttClient.on('message', (receivedTopic, message) => {
 
     // --- REGLA 3 (LAMPORT): Parte 2 (Fusión) ---
     const receivedLamportTS = data.lamport_ts || 0;
+    const previousLamportClock = lamportClock;
     lamportClock = Math.max(lamportClock, receivedLamportTS);
     console.log(`[LAMPORT] Reloj local actualizado a: ${lamportClock} (recibido: ${receivedLamportTS})`);
 
     // --- REGLA 3 (VECTORIAL): Parte 2 (Fusión) ---
     const receivedVectorClock = data.vector_clock || new Array(VECTOR_PROCESS_COUNT).fill(0);
+    const previousVectorClock = [...vectorClock]; // Guardamos copia para comparación
     // Fusionamos los relojes: tomamos el máximo de cada posición
     for (let i = 0; i < VECTOR_PROCESS_COUNT; i++) {
       vectorClock[i] = Math.max(vectorClock[i], receivedVectorClock[i]);
     }
     console.log(`[VECTOR] Reloj local actualizado a: [${vectorClock.join(',')}] (recibido: [${receivedVectorClock.join(',')}])`);
 
+    // ========================================================================
+    //          FASE 1: BARRERA DE ENTRADA TEMPORAL (FILTRO ESTRICTO)
+    // ========================================================================
+    
+    // Extraemos el timestamp del mensaje
+    const timestampMensaje = new Date(data.timestamp).getTime();
+    const horaLocal = Date.now();
+    
+    // Calculamos la diferencia absoluta (en milisegundos)
+    const diferenciaAbsoluta = Math.abs(timestampMensaje - horaLocal);
+    
+    console.log(`[FASE1] Diferencia temporal: ${diferenciaAbsoluta}ms`);
+    
+    // REGLA 1: Si la diferencia es mayor a 2000ms (2 segundos) → VALIDAR
+    if (diferenciaAbsoluta > 2000) {
+      console.warn(`⚠️ [FASE1] Timestamp anómalo detectado (diferencia: ${diferenciaAbsoluta}ms)`);
+      
+      // EXCEPCIÓN: Verificamos si el reloj de Lamport justifica la anomalía
+      // Condición A: El Lamport recibido debe ser MAYOR al que teníamos antes de fusionar
+      const lamportEsMayor = receivedLamportTS > previousLamportClock;
+      
+      // Condición B: El vector clock debe ser "consistente" (causalidad respetada)
+      // Consistencia = ningún componente del vector recibido es MENOR al que teníamos
+      let vectorClockConsistente = true;
+      for (let i = 0; i < VECTOR_PROCESS_COUNT; i++) {
+        if (receivedVectorClock[i] < previousVectorClock[i]) {
+          vectorClockConsistente = false;
+          break;
+        }
+      }
+      
+      console.log(`[FASE1] Lamport mayor: ${lamportEsMayor}, Vector consistente: ${vectorClockConsistente}`);
+      
+      // Si ambas condiciones se cumplen, ACEPTAMOS pero forzamos hora local
+      if (lamportEsMayor && vectorClockConsistente) {
+        console.log(`✅ [FASE1] Excepción aplicada: Forzando timestamp a hora local.`);
+        data.timestamp = new Date(horaLocal).toISOString();
+      } else {
+        // Si no cumple la excepción, RECHAZAMOS el mensaje
+        console.error(`❌ [FASE1] Rejected future packet: diferencia temporal > 2s sin justificación lógica.`);
+        return; // DESCARTAMOS el mensaje (no se guarda en InfluxDB)
+      }
+    } else {
+      console.log(`✅ [FASE1] Timestamp válido (dentro del rango de 2s).`);
+    }
+
+    // ========================================================================
+    //                    FIN VALIDACIÓN FASE 1
+    // ========================================================================
+
+    
+     // Validación básica de campos requeridos
     if (!deviceId || data.temperatura === undefined || data.humedad === undefined) {
       console.warn('[WARN] Mensaje incompleto recibido, ignorando:', data);
       return;
