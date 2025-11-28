@@ -2,7 +2,7 @@
 
 const mqtt = require('mqtt');
 const config = require('../config');
-const axios = require("axios");
+//const axios = require("axios");
 const fs = require('fs'); // ← FASE 3: Módulo para lectura/escritura de archivos
 const path = require('path'); // ← FASE 3: Para manejar rutas de archivos
 
@@ -773,37 +773,6 @@ function handleTimeResponse(payload) {
   
   console.log(`✅ [CRISTIAN] Reloj sincronizado. Offset ajustado: ${clockOffset.toFixed(0)}ms`);
 }
-
-//cristhian mejorado
-function syncTimeCristian2(callback) {
-  const t0 = Date.now();
-
-  // Petición HTTP con XMLHttpRequest clásico
-  const xhr = new XMLHttpRequest();
-  xhr.open("GET", "http://time-server:3000/now", true);
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      const t1 = Date.now();
-      const rtt = t1 - t0;
-
-      if (rtt > 500) {
-        console.log("[CRISTIAN] RTT demasiado alto, descartando.");
-        callback(null);
-        return;
-      }
-
-      const result = JSON.parse(xhr.responseText);
-      const server = new Date(result.now).getTime();
-      const corrected = server + (rtt / 2);
-
-      callback({ corrected: corrected, rtt: rtt });
-    }
-  };
-  xhr.send();
-}
-
-
-
 
 function requestCalibration() {
   if (sensorState === 'IDLE' && !isCoordinator) { // El coordinador no se auto-solicita en este ejemplo simple
