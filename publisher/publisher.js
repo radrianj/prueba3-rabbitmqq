@@ -403,7 +403,17 @@ function handleElectionMessages(topic, payload) {
     // Solo votamos si el candidato tiene prioridad MAYOR que nosotros
     if (candidatePriority > MY_PRIORITY) {
       console.log(`[QUORUM] Votando por candidato ${candidateId} (Prioridad: ${candidatePriority})`);
+
+      // Votamos si:
+      // 1. El candidato tiene prioridad MAYOR que nosotros (es superior)
+      // 2. O si estamos en medio de una elección y nadie mejor ha aparecido
+
+      // Votamos si:
+      // 1. El candidato tiene prioridad MAYOR que nosotros (es superior)
+      // 2. O si estamos en medio de una elección y nadie mejor ha aparecido
       
+      if (shouldVote) {
+      console.log(`[QUORUM] ✅ Votando por candidato ${candidateId} (Prioridad: ${candidatePriority})`);
       client.publish('utp/sistemas_distribuidos/grupo1/election/vote_ack', JSON.stringify({
         type: 'VOTE_ACK',
         votesFor: candidatePriority,
@@ -411,7 +421,7 @@ function handleElectionMessages(topic, payload) {
         timestamp: Date.now()
       }));
     } else {
-      console.log(`[QUORUM] Rechazando voto para ${candidateId} (su prioridad ${candidatePriority} <= mi prioridad ${MY_PRIORITY})`);
+      console.log(`[QUORUM] ❌ Rechazando voto para ${candidateId} (prioridad ${candidatePriority} < mi prioridad ${MY_PRIORITY})`);
     }
     return;
   }

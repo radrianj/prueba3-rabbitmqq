@@ -170,41 +170,42 @@ services:
       - PROCESS_ID=2
     restart: on-failure
 
+#
   # --- Suscriptores de ejemplo (sin cambios, pero dependen del broker) ---
-  unicast-subscriber:
-    build: .
-    container_name: unicast-subscriber
-    depends_on:
-      - mqtt-broker
-    command: "node subscriber/unicast.js"
-    environment:
-      - DEVICE_ID=sensor-001
-    restart: on-failure
+#  unicast-subscriber:
+#    build: .
+#    container_name: unicast-subscriber
+#    depends_on:
+#      - mqtt-broker
+#    command: "node subscriber/unicast.js"
+#    environment:
+#      - DEVICE_ID=sensor-001
+#    restart: on-failure
 
-  multicast-subscriber:
-    build: .
-    container_name: multicast-subscriber
-    depends_on:
-      - mqtt-broker
-    command: "node subscriber/multicast.js"
-    restart: on-failure
+#  multicast-subscriber:
+#    build: .
+#    container_name: multicast-subscriber
+#    depends_on:
+#      - mqtt-broker
+#    command: "node subscriber/multicast.js"
+#    restart: on-failure
 
-  broadcast-subscriber:
-    build: .
-    container_name: broadcast-subscriber
-    depends_on:
-      - mqtt-broker
-    command: "node subscriber/broadcast.js"
-    restart: on-failure
+#  broadcast-subscriber:
+#    build: .
+#    container_name: broadcast-subscriber
+#    depends_on:
+#      - mqtt-broker
+#    command: "node subscriber/broadcast.js"
+#    restart: on-failure
 
-  monitor:
-    build: .
-    container_name: monitor
-    depends_on:
-      - mqtt-broker
-    command: "node subscriber/monitor.js"
-    restart: on-failure
-
+#  monitor:
+#    build: .
+#    container_name: monitor
+#    depends_on:
+#      - mqtt-broker
+#    command: "node subscriber/monitor.js"
+#    restart: on-failure
+#
   # --- Servicio para el Monitor Web (Frontend) ---
   web-monitor:
     image: nginx:1.25-alpine
