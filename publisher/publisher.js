@@ -154,14 +154,14 @@ client.on('message', (topic, message) => {
   // ============================================================================
   //          FASE 2: MANEJO DE LEASES Y VOTOS
   // ============================================================================
-  
+
   // A. Renovación de Lease del Líder
   if (topic === 'utp/sistemas_distribuidos/grupo1/election/lease') {
     // Un líder publicó su lease, actualizamos el timestamp
     if (payload.priority > MY_PRIORITY || (payload.priority === MY_PRIORITY && isCoordinator)) {
       lastSeenLeaderLease = Date.now();
       console.log(`[LEASE] Lease renovado por líder (Prioridad: ${payload.priority})`);
-      
+
       // Si yo era candidato o líder, pero veo un lease de alguien con más prioridad, me bajo
       if (payload.priority > MY_PRIORITY && (isCoordinator || amICandidate)) {
         console.log(`[LEASE] Detectado líder superior. Stepping down.`);
@@ -177,7 +177,7 @@ client.on('message', (topic, message) => {
     if (payload.votesFor === MY_PRIORITY && amICandidate) {
       electionVotes.add(payload.voterId);
       console.log(`[QUORUM] Voto recibido de ${payload.voterId}. Total: ${electionVotes.size}/${QUORUM_SIZE}`);
-      
+
       // Si alcanzamos quórum, nos declaramos líder
       if (electionVotes.size >= QUORUM_SIZE) {
         declareVictory();
@@ -185,7 +185,7 @@ client.on('message', (topic, message) => {
     }
     return;
   }
-// ============================================================================
+  // ============================================================================
 
   // --- 1. MANEJO DE ELECCIÓN (Bully) ---
   if (topic.startsWith('utp/sistemas_distribuidos/grupo1/election')) {
@@ -246,7 +246,7 @@ function checkLeaseExpiration() {
 
   // Si NO somos líder, verificamos si el líder actual sigue renovando
   const timeSinceLastLease = Date.now() - lastSeenLeaderLease;
-  
+
   if (timeSinceLastLease > LEASE_DURATION && !electionInProgress && !amICandidate) {
     console.warn(`⚠️ [LEASE] Líder no renovó lease en ${timeSinceLastLease}ms. Iniciando elección.`);
     startElection();
@@ -278,8 +278,8 @@ function renewLease() {
     timestamp: Date.now()
   });
 
-  client.publish('utp/sistemas_distribuidos/grupo1/election/lease', leaseMsg, { 
-    qos: 1, 
+  client.publish('utp/sistemas_distribuidos/grupo1/election/lease', leaseMsg, {
+    qos: 1,
     retain: true // IMPORTANTE: El mensaje se mantiene en el broker
   });
 
@@ -293,7 +293,7 @@ function stepDownFromLeadership() {
   if (!isCoordinator && !amICandidate) return;
 
   console.log(`[ROLE] *** STEPPING DOWN from leadership ***`);
-  
+
   isCoordinator = false;
   amICandidate = false;
   electionInProgress = false;
@@ -395,25 +395,24 @@ function handleElectionMessages(topic, payload) {
   // ============================================================================
   //          FASE 2: MANEJO DE SOLICITUDES DE VOTOS
   // ============================================================================
+
   // Alguien nos pide nuestro voto
   if (topic === 'utp/sistemas_distribuidos/grupo1/election/vote_request') {
     const candidatePriority = payload.candidatePriority;
     const candidateId = payload.candidateId;
-    
-    // Solo votamos si el candidato tiene prioridad MAYOR que nosotros
-    if (candidatePriority > MY_PRIORITY) {
-      console.log(`[QUORUM] Votando por candidato ${candidateId} (Prioridad: ${candidatePriority})`);
 
-      // Votamos si:
-      // 1. El candidato tiene prioridad MAYOR que nosotros (es superior)
-      // 2. O si estamos en medio de una elección y nadie mejor ha aparecido
+    // Votamos si:
+    // 1. El candidato tiene prioridad MAYOR que nosotros (es superior)
+    // 2. O si estamos en medio de una elección y nadie mejor ha aparecido
 
-      // Votamos si:
-      // 1. El candidato tiene prioridad MAYOR que nosotros (es superior)
-      // 2. O si estamos en medio de una elección y nadie mejor ha aparecido
-      
-      if (shouldVote) {
+    // CORRECCIÓN: También votamos por candidatos con prioridad >= nuestra
+    // si no tenemos líder activo
+    const shouldVote = candidatePriority >= MY_PRIORITY ||
+      (Date.now() - lastSeenLeaderLease > LEASE_DURATION);
+
+    if (shouldVote) {
       console.log(`[QUORUM] ✅ Votando por candidato ${candidateId} (Prioridad: ${candidatePriority})`);
+
       client.publish('utp/sistemas_distribuidos/grupo1/election/vote_ack', JSON.stringify({
         type: 'VOTE_ACK',
         votesFor: candidatePriority,
@@ -501,14 +500,14 @@ function becomeCoordinator() {
 
   // Establecer el lease inicial
   myLeaseExpiration = Date.now() + LEASE_DURATION;
-  
+
   // Renovar el lease inmediatamente
   renewLease();
 
   // Configurar renovaciones automáticas cada 2 segundos
   if (leaseRenewalTimer) clearInterval(leaseRenewalTimer);
   leaseRenewalTimer = setInterval(renewLease, LEASE_RENEWAL_INTERVAL);
-  
+
   console.log(`[LEASE] Sistema de leases activado (renovación cada ${LEASE_RENEWAL_INTERVAL}ms)`);
 
   // NOTA: NO reiniciamos el estado del mutex aquí, porque ya lo recuperamos del WAL
@@ -542,14 +541,14 @@ function writeToWAL(operation, deviceId) {
   try {
     const timestamp = new Date().toISOString(); // Timestamp de la operación
     const logEntry = JSON.stringify({  // Estructura del log
-      timestamp, 
-      operation, 
-      deviceId 
+      timestamp,
+      operation,
+      deviceId
     }) + '\n';
-    
+
     // Escribir de forma síncrona para garantizar persistencia inmediata
     fs.appendFileSync(WAL_FILE_PATH, logEntry, 'utf8');
-    
+
     console.log(`[WAL] Operación registrada: ${operation} - ${deviceId}`);
   } catch (error) {
     console.error(`[WAL ERROR] No se pudo escribir en el log:`, error);
@@ -567,7 +566,7 @@ function recoverFromWAL() {
   }
 
   console.log(`[WAL] Iniciando recuperación de estado...`);
-  
+
   // Verificar si el archivo WAL existe
   if (!fs.existsSync(WAL_FILE_PATH)) {
     console.log(`[WAL] No se encontró archivo WAL. Iniciando con estado limpio.`);
@@ -579,7 +578,7 @@ function recoverFromWAL() {
     // Leer el contenido completo del archivo
     const walContent = fs.readFileSync(WAL_FILE_PATH, 'utf8');
     const lines = walContent.split('\n').filter(line => line.trim() !== '');
-    
+
     console.log(`[WAL] Leyendo ${lines.length} entradas del log...`);
 
     // Estructuras temporales para reconstruir el estado
@@ -759,13 +758,13 @@ function syncClock() {
 function handleTimeResponse(payload) {
   // T2: Momento en que recibimos la respuesta
   const T2 = Date.now();
-  
+
   // Calculamos el RTT (Round Trip Time)
   // RTT = Tiempo total que tardó el mensaje en ir y volver
   const RTT = T2 - syncRequestTime;
-  
+
   console.log(`[CRISTIAN] RTT calculado: ${RTT}ms`);
-  
+
   // VALIDACIÓN: Si el RTT es mayor a 500ms, la sincronización no es confiable
   if (RTT > 500) {
     console.warn(`⚠️ [CRISTIAN] Sincronización descartada: RTT demasiado alto (${RTT}ms > 500ms)`);
@@ -776,11 +775,11 @@ function handleTimeResponse(payload) {
   const serverTime = payload.serverTime || Date.now();
   const estimatedDelay = RTT / 2;
   const correctedTime = serverTime + estimatedDelay;
-  
+
   // Calculamos el offset (diferencia entre nuestro reloj y el del servidor)
   const currentLocalTime = getSimulatedTime().getTime();
   clockOffset = correctedTime - currentLocalTime;
-  
+
   console.log(`✅ [CRISTIAN] Reloj sincronizado. Offset ajustado: ${clockOffset.toFixed(0)}ms`);
 }
 
@@ -808,7 +807,7 @@ function publishTelemetry() {
   lamportClock++;
   vectorClock[PROCESS_ID]++;
   const correctedTime = new Date(getSimulatedTime().getTime() + clockOffset);
-  
+
 
   const telemetryData = {
     deviceId: DEVICE_ID,
